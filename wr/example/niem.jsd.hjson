@@ -1,6 +1,13 @@
 {
     "$schema" : "http://json-schema.org/draft-04/schema#",
     "properties" : {
+        "j:VehicleUseANSID20Code" : {
+            "oneOf" : [
+                { "$ref" : "#/definitions/aamva_d20:VehicleUseCodeType" },
+                { "type" : "array",
+                  "items" : { "$ref" : "#/definitions/aamva_d20:VehicleUseCodeType" }}
+            ]
+        }
         "nc:CurrencyCode" : {
             "oneOf" : [
                 {
@@ -15,15 +22,15 @@
             ]
         },
         "nc:Vehicle" : {
-//            "oneOf" : [
-//                {
+            "oneOf" : [
+                {
                     "$ref" : "#/definitions/nc:VehicleType"
-//                },
-//                {
-//                    "type" : "array",
-//                    "items" : { "$ref" : "#/definitions/nc:VehicleType" }
-//                }
-//            ]
+                }
+                {
+                    "type" : "array",
+                    "items" : { "$ref" : "#/definitions/nc:VehicleType" }
+                }
+            ]
         },
     },
     "definitions" : {
@@ -31,20 +38,44 @@
             "title" : "Property not included in the subset",
             "description" : "The property that referenced this definition is not included in the subset. If you wish to use this property, add the property to the subset and generate a new JSON Schema."
             "type" : "null"
-            // "allOf" : [
-            //    { "enum" : [ "true" ] },
-            //    { "enum" : [ "false" ] }
-            //]
         },
-        "nc:AmountType" : {
-            "properties" : {
-                "nc:Amount" : {
-                    "$ref" : "#/definitions/_not_in_subset"
-                },
-                "nc:CurrencyCode" : {
-                    "$ref" : "#/properties/nc:CurrencyCode"
-                }
+        "_element_is_abstract" : {
+            "title" : "Element is abstract"
+            "description" : "The property represents a NIEM element that is abstract. It appears in this schema for documentation purposes, but is not allowed in JSON documents validated against this schema."
+            "type" : "null"
+        },
+        "structures:ObjectType" : {
+            type : object
+            patternProperties : {
+                "^ism:.*" : { type : string }
+                "^ntk:.*" : { type : string }
             }
+            properties : {
+                "@id" : { format : uriref }
+                "@base" : { format : uriref } 
+            }
+        }
+        "nc:AmountType" : {
+            description : "A data type for an amount of money."
+            allOf : [
+                { "$ref" : "#/definitions/structures:ObjectType" }
+                { type : object
+                  "properties" : {
+                      "nc:Amount" : {
+                          description: "An amount of money."
+                          "$ref" : "#/definitions/_not_in_subset"
+                      },
+                      "nc:Currency" : {
+                          description: "A data concept for a unit of money or exchange."
+                          "$ref" : "#/definitions/_element_is_abstract"
+                      }
+                      "nc:CurrencyCode" : {
+                          description: "A unit of money or exchange. Appears as a substitution for nc:Currency."
+                          "$ref" : "#/properties/nc:CurrencyCode"
+                      }
+                  }
+                }
+            ]
         },
         "nc:VehicleType" : {
             "allOf" : [
@@ -64,13 +95,14 @@
                 {
                     type: object
                     "properties" : {
+                        // nc:VehicleUse is abstract; substitutions:
                         "j:VehicleUseANSID20Code" : {
+                            "$ref" : "#/properties/j:VehicleUseANSID20Code"
+                        }
+                        "nc:VehicleUseText" : {
+                            // "$ref" : "#/definitions/nc:TextType"
                             "$ref" : "#/definitions/_not_in_subset"
-                        },
-                        "nc:ConveyanceUseText" : {
-                            // ZZZZZ
-                            // "$ref" : "#/definitions/_not_in_subset"
-                        },
+                        }
                         "nc:VehicleSeatingQuantity" : {
                             "$ref" : "#/definitions/_not_in_subset"
                         }
@@ -78,19 +110,26 @@
                 }
             ]
         },
+        // ZZZZZ
         "nc:ItemType" : {
             type: object
-            // allof: [ { $ref : "
+            properties : {
+            }
         },
         "iso_4217:CurrencyCodeType" : {
             oneOf : [
                 { "$ref" : "#/definitions/iso_4217:CurrencyCodeSimpleType" }
-                { type: object
-                  properties: {
-                      "rdf:value" : {
-                          "$ref" : "#/definitions/iso_4217:CurrencyCodeSimpleType"
-                      }
-                  }
+                {
+                    allOf : [
+                        { "$ref" : "#/definitions/structures:ObjectType" }
+                        { type: object
+                          properties: {
+                              "rdf:value" : {
+                                  "$ref" : "#/definitions/iso_4217:CurrencyCodeSimpleType"
+                              }
+                          }
+                        }
+                    ]
                 }
             ]
         }
@@ -101,6 +140,28 @@
                 { enum: [ "EUR" ], description: "Euro" }
                 { enum: [ "GBP" ], description: "Pound Sterling" }
                 { enum: [ "USD" ], description: "US Dollar" }
+            ]
+        }
+        "aamva_d20:VehicleUseCodeType" : {
+            description : "A data type for ways in which a vehicle is used."
+            oneOf : [
+                { "$ref" : "#/definitions/aamva_d20:VehicleUseCodeSimpleType" }
+                { type: object
+                  properties: {
+                      "rdf:value" : {
+                          "$ref" : "#/definitions/aamva_d20:VehicleUseCodeSimpleType"
+                      }
+                  }
+                }
+            ]
+        }
+        "aamva_d20:VehicleUseCodeSimpleType" : {
+            type: string
+            description : "A data type for ways in which a vehicle is used."
+            oneOf : [
+                { enum: [ "01" ], description: "Personal" }
+                { enum: [ "02" ], description: "Driver Training" }
+                { enum: [ "03" ], description: "Construction/Maintenance" }
             ]
         }
     },
